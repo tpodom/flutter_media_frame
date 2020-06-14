@@ -40,13 +40,17 @@ class _WeatherState extends State<Weather> {
   _loadWeather() async {
     await this._loadPosition();
     var apiKey = Provider.of<SettingsModel>(context, listen: false).weatherAPIKey;
-    String url =
-        'http://api.openweathermap.org/data/2.5/onecall?lat=${this._position.latitude}&lon=${this._position.longitude}&appid=$apiKey&units=imperial';
+    if (apiKey != null) {
+      String url =
+          'http://api.openweathermap.org/data/2.5/onecall?lat=${this._position.latitude}&lon=${this._position.longitude}&appid=$apiKey&units=imperial';
 
-    http.Response response = await http.get(url);
+      http.Response response = await http.get(url);
 
-    if (response.statusCode == 200) {
-      this._weatherData = json.decode(response.body);
+      if (response.statusCode == 200) {
+        setState(() {
+          this._weatherData = json.decode(response.body);
+        });
+      }
     }
   }
 
