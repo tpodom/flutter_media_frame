@@ -95,8 +95,17 @@ class _HomePageState extends State<_HomePage> {
     var now = TimeOfDay.now();
     var timeOfDayAsDouble = (TimeOfDay timeOfDay) => timeOfDay.hour + timeOfDay.minute / 60.0;
     var settings = Provider.of<SettingsModel>(context, listen: false);
-    return settings.enableNightMode &&
-        (timeOfDayAsDouble(now) < timeOfDayAsDouble(settings.nightEnd) || timeOfDayAsDouble(now) >= timeOfDayAsDouble(settings.nightStart));
+    if (!settings.enableNightMode) {
+      return false;
+    }
+
+    if (timeOfDayAsDouble(settings.nightEnd) < timeOfDayAsDouble(settings.nightStart)) {
+      return (timeOfDayAsDouble(now) < timeOfDayAsDouble(settings.nightEnd)
+          || timeOfDayAsDouble(now) >= timeOfDayAsDouble(settings.nightStart));
+    }
+    return (timeOfDayAsDouble(now) < timeOfDayAsDouble(settings.nightEnd)
+        && timeOfDayAsDouble(now) >= timeOfDayAsDouble(settings.nightStart));
+
   }
 
   _hideSystemUI() {
@@ -110,7 +119,7 @@ class _HomePageState extends State<_HomePage> {
   _startTimer() {
     this._stopTimer();
     var settings = Provider.of<SettingsModel>(context, listen: false);
-    this._timer = Timer(Duration(minutes: settings.clockDelayMinutes), () => this._switchDisplays());
+    this._timer = Timer.periodic(Duration(minutes: settings.clockDelayMinutes), (timer) => this._switchDisplays());
   }
 
   _stopTimer() {
