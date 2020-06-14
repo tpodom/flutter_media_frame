@@ -31,10 +31,13 @@ class _AssetsState extends State<AssetsRoute> {
   }
 
   Widget buildGridView(settings) {
-    return GridView.count(
-      crossAxisCount: (MediaQuery.of(context).size.width / THUMBNAIL_SIZE).floor(),
-      childAspectRatio: 0.8,
-      children: List.generate(settings.assets.length, (index) {
+    return GridView.builder(
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: (MediaQuery.of(context).size.width / THUMBNAIL_SIZE).floor(),
+        childAspectRatio: 0.8,
+      ),
+      itemCount: settings.assets.length,
+      itemBuilder: (context, index) {
         MediaAsset asset = settings.assets[index];
 
         return _AssetThumbnail(
@@ -46,8 +49,7 @@ class _AssetsState extends State<AssetsRoute> {
             onDeselect: () {
               this._deselectAsset(asset);
             });
-      }),
-    );
+      });
   }
 
   @override
@@ -84,6 +86,7 @@ class _AssetsState extends State<AssetsRoute> {
           itemBuilder: (BuildContext context) => [
                 PopupMenuItem(
                   value: 'select',
+                  enabled: this._selections.length > 0,
                   child: Text('Select all'),
                 ),
               ]);
@@ -138,7 +141,7 @@ class _AssetThumbnailState extends State<_AssetThumbnail> {
         quality: 25,
       ));
     } else {
-      return FileImage(this.widget._asset.file);
+      return ResizeImage(FileImage(this.widget._asset.file), width: THUMBNAIL_SIZE.floor());
     }
   }
 
@@ -150,7 +153,7 @@ class _AssetThumbnailState extends State<_AssetThumbnail> {
     return FutureBuilder(
         future: this._assetImageProvider,
         builder: (context, AsyncSnapshot<ImageProvider> snapshot) {
-          final imageWidget = snapshot.hasData
+          final imageWidget = snapshot.hasData && snapshot.data != null
               ? Center(
                   child: FadeInImage(
                       placeholder: MemoryImage(kTransparentImage), image: snapshot.data, fit: BoxFit.cover, width: THUMBNAIL_SIZE, height: THUMBNAIL_SIZE),
@@ -185,9 +188,9 @@ class _AssetThumbnailState extends State<_AssetThumbnail> {
                 });
               },
               child: Card(
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.center, mainAxisAlignment: MainAxisAlignment.center, children: [
-                imageWidget,
-                Container(
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.center, mainAxisAlignment: MainAxisAlignment.end, children: [
+                Expanded(flex: 2, child: imageWidget),
+                Expanded(flex: 1, child: Container(
                     color: Colors.white,
                     padding: EdgeInsets.all(8.0),
                     child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
@@ -196,7 +199,7 @@ class _AssetThumbnailState extends State<_AssetThumbnail> {
                         child: this.widget._selected ? selectedIndicatorWidget : Icon(this.widget._asset.video ? Icons.video_label : Icons.image, size: 34.0),
                       ),
                       Expanded(flex: 1, child: Text(this.widget._asset.file.path.split("/")?.last, overflow: TextOverflow.ellipsis))
-                    ]))
+                    ])))
               ])));
         });
   }
